@@ -21,16 +21,35 @@ violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
 ```
 
-```{r sex-chart}
-sex_scores <- scores %>% 
-  filter(str_detect(DisplayText, "Risk of Recidivism")) %>% 
-  group_by(Sex_Code_Text) %>% 
+```{r sex-score}
+sex_score_recidivism <- scores %>%
+  filter(DisplayText == "Risk of Recidivism") %>%
+  group_by(Sex_Code_Text) %>%
   summarize(avg_score = mean(DecileScore))
 
-head(sex_scores)
+sex_score_violence <- scores %>%
+  filter(DisplayText == "Risk of Violence") %>%
+  group_by(Sex_Code_Text) %>%
+  summarize(avg_score = mean(DecileScore))
 
-ggplot(data = sex_scores) +
-  geom_col(aes(x = Sex_Code_Text, y = avg_score))
+sex_score_fail_appear <- scores %>%
+  filter(DisplayText == "Risk of Failure to Appear") %>%
+  group_by(Sex_Code_Text) %>%
+  summarize(avg_score = mean(DecileScore))
+```
+
+```{r sex-score-viz}
+ggplot(data = sex_score_recidivism) +
+  geom_col(aes(x = Sex_Code_Text, y = avg_score)) +
+  labs(title = "Risk of Recidivism Score")
+
+ggplot(data = sex_score_violence) +
+  geom_col(aes(x = Sex_Code_Text, y = avg_score)) +
+  labs(title = "Risk of Violence")
+
+ggplot(data = sex_score_fail_appear) +
+  geom_col(aes(x = Sex_Code_Text, y = avg_score)) +
+  labs(title = "Risk of Failure to Appear")
 ```
 
 ```{r race-score}
