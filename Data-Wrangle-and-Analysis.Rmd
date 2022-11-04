@@ -20,9 +20,9 @@ violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
 ```
 
-
 ```{r sex-chart}
 sex_scores <- scores %>% 
+  filter(str_detect(DisplayText, "Risk of Recidivism")) %>% 
   group_by(Sex_Code_Text) %>% 
   summarize(avg_score = mean(DecileScore))
 
@@ -42,4 +42,3 @@ race_score <- scores %>%
 ggplot(race_score, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
   geom_bar(stat = 'identity')
 ```
-
