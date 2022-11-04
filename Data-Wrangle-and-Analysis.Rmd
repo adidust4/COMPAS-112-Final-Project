@@ -8,8 +8,7 @@ date: "2022-11-02"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+```{r imports}
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
@@ -21,6 +20,7 @@ violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
 ```
 
+<<<<<<< Updated upstream
 ```{r sex-chart}
 sex_scores <- scores %>% 
   group_by(Sex_Code_Text) %>% 
@@ -31,3 +31,15 @@ head(sex_scores)
 ggplot(data = sex_scores) +
   geom_col(aes(x = Sex_Code_Text, y = avg_score))
 ```
+=======
+```{r race-score-viz}
+race_score <- scores %>%
+  mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
+  filter(DisplayText == "Risk of Recidivism") %>%
+  group_by(Ethnic_Code_Text) %>%
+  summarize(avg_score = mean(DecileScore))
+  
+ggplot(race_score, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
+  geom_bar(stat = 'identity')
+```
+>>>>>>> Stashed changes
