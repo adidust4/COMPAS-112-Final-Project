@@ -7,3 +7,16 @@ date: "2022-11-02"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+```
+
+```{r read-files}
+scores <- read.csv('compas-scores-raw.csv')
+violent <- read.csv('cox-violent-parsed.csv')
+fair_ml <- read.csv('propublica_data_for_fairml.csv')
+```
