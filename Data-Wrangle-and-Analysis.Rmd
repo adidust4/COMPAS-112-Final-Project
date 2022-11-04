@@ -70,15 +70,18 @@ race_score_fail_appear <- scores %>%
 ```
 
 ``` {r race-score-viz} 
-ggplot(race_score, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
+ggplot(race_score, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Ethnic_Code_Text)) +
   geom_bar(stat = 'identity') +
-  labs(title = "Risk of Recidivism Score")
+  labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score") +
+  scale_x_discrete(guide = guide_axis(n.dodge=2))
 
-ggplot(race_score_violence, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
+ggplot(race_score_violence, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Ethnic_Code_Text)) +
   geom_bar(stat = 'identity') +
-  labs(title = "Risk of Violence")
+  labs(title = "Risk of Violence", x = "Race", y = "Average Score") +
+  scale_x_discrete(guide = guide_axis(n.dodge=2))
 
-ggplot(race_score_fail_appear, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
+ggplot(race_score_fail_appear, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Ethnic_Code_Text)) +
   geom_bar(stat = 'identity') +
-  labs(title = "Risk of Failure to Appear")
+  labs(title = "Risk of Failure to Appear", x = "Race", y = "Average Score") +
+  scale_x_discrete(guide = guide_axis(n.dodge=2))
 ```
