@@ -15,7 +15,8 @@ library(lubridate)
 ```
 
 ```{r read-files}
-scores <- read.csv('compas-scores-raw.csv')
+scores <- read.csv('compas-scores-raw.csv') %>%
+  mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text))
 violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
 ```
@@ -32,13 +33,33 @@ ggplot(data = sex_scores) +
   geom_col(aes(x = Sex_Code_Text, y = avg_score))
 ```
 
-```{r race-score-viz}
-race_score <- scores %>%
-  mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
+```{r race-score}
+race_score_recidivism <- scores %>%
   filter(DisplayText == "Risk of Recidivism") %>%
   group_by(Ethnic_Code_Text) %>%
   summarize(avg_score = mean(DecileScore))
-  
+
+race_score_violence <- scores %>%
+  filter(DisplayText == "Risk of Violence") %>%
+  group_by(Ethnic_Code_Text) %>%
+  summarize(avg_score = mean(DecileScore))
+
+race_score_fail_appear <- scores %>%
+  filter(DisplayText == "Risk of Failure to Appear") %>%
+  group_by(Ethnic_Code_Text) %>%
+  summarize(avg_score = mean(DecileScore))
+```
+
+``` {r race-score-viz} 
 ggplot(race_score, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
-  geom_bar(stat = 'identity')
+  geom_bar(stat = 'identity') +
+  labs(title = "Risk of Recidivism Score")
+
+ggplot(race_score_violence, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
+  geom_bar(stat = 'identity') +
+  labs(title = "Risk of Violence")
+
+ggplot(race_score_fail_appear, aes(x = Ethnic_Code_Text, y = avg_score, fill = Ethnic_Code_Text)) +
+  geom_bar(stat = 'identity') +
+  labs(title = "Risk of Failure to Appear")
 ```
