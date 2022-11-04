@@ -20,3 +20,14 @@ scores <- read.csv('compas-scores-raw.csv')
 violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
 ```
+
+```{r sex-chart}
+sex_scores <- scores %>% 
+  group_by(Sex_Code_Text) %>% 
+  summarize(avg_score = mean(DecileScore))
+
+head(sex_scores)
+
+ggplot(data = sex_scores) +
+  geom_col(aes(x = Sex_Code_Text, y = avg_score))
+```
