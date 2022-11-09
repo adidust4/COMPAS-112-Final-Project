@@ -70,7 +70,7 @@ race_score_fail_appear <- scores %>%
 ```
 
 ``` {r race-score-viz} 
-ggplot(race_score, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Ethnic_Code_Text)) +
+ggplot(race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Ethnic_Code_Text)) +
   geom_bar(stat = 'identity') +
   labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score") +
   scale_x_discrete(guide = guide_axis(n.dodge=2))
@@ -84,4 +84,11 @@ ggplot(race_score_fail_appear, aes(x = reorder(Ethnic_Code_Text, -avg_score), y 
   geom_bar(stat = 'identity') +
   labs(title = "Risk of Failure to Appear", x = "Race", y = "Average Score") +
   scale_x_discrete(guide = guide_axis(n.dodge=2))
+```
+
+
+```{r}
+mean(race_score_violence$avg_score)
+
+mean(mean((race_score_violence %>% filter(Ethnic_Code_Text == "African-American"))$avg_score))
 ```
