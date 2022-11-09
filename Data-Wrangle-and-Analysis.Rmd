@@ -87,10 +87,10 @@ ggplot(race_score_fail_appear, aes(x = reorder(Ethnic_Code_Text, -avg_score), y 
 ```
 
 
-```{r}
-total_avg <- mean(race_score_violence$avg_score)
+```{r adi-one-number-story}
+total_avg <- mean((race_score_violence %>% filter(Ethnic_Code_Text != "African-American"))$avg_score)
 
-aa_avg <- mean(mean((race_score_violence %>% filter(Ethnic_Code_Text == "African-American"))$avg_score))
+aa_avg <- mean((race_score_violence %>% filter(Ethnic_Code_Text == "African-American"))$avg_score)
 
 aa_avg / total_avg
 ```
