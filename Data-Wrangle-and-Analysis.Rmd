@@ -16,7 +16,8 @@ library(lubridate)
 
 ```{r read-files}
 scores <- read.csv('compas-scores-raw.csv') %>%
-  mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text))
+  mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
+  mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "Oriental","Asian", Ethnic_Code_Text))
 violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
 ```
