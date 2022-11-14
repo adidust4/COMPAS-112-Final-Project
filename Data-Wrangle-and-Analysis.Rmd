@@ -109,3 +109,15 @@ ggplot(race_scores_all, aes(fill=`Score Type`, y=avg_score, x=reorder(Ethnic_Cod
     scale_fill_manual(values = c("#2e282a", "#EF3E36", "#17BEBB")) +
     theme_light()
 ```
+
+```{r finn-viz}
+sex_race_score_recidivism <- scores %>%
+  group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
+  summarize(avg_score = mean(DecileScore))
+
+ggplot(sex_race_score_recidivism, aes(x = Ethnic_Code_Text, y = avg_score, fill = Sex_Code_Text, facet = Sex_Code_Text)) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  labs(title = "Risk of Recidivism Score", x = "Race", fill = "Sex") +
+  facet_wrap(. ~ DisplayText) +
+  theme_minimal()
+```
