@@ -95,3 +95,17 @@ aa_avg <- mean((race_score_violence %>% filter(Ethnic_Code_Text == "African-Amer
 
 aa_avg / total_avg
 ```
+
+```{r adi-viz}
+race_scores_all <- scores %>%
+  mutate(`Score Type` = DisplayText) %>%
+  group_by(Ethnic_Code_Text, `Score Type`) %>%
+  summarize(avg_score = mean(DecileScore))
+
+ggplot(race_scores_all, aes(fill=`Score Type`, y=avg_score, x=reorder(Ethnic_Code_Text, -avg_score))) + 
+    geom_bar(position="dodge", stat="identity") +
+    labs(title = "COMPAS Risk Score Averages By Race", x = "Race", y = "Average Score (Maximum of 10)") +
+    scale_x_discrete(guide = guide_axis(n.dodge=2)) +
+    scale_fill_manual(values = c("#2e282a", "#EF3E36", "#17BEBB")) +
+    theme_light()
+```
