@@ -115,9 +115,8 @@ sex_race_score_recidivism <- scores %>%
   group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
   summarize(avg_score = mean(DecileScore))
 
-ggplot(sex_race_score_recidivism, aes(x = Ethnic_Code_Text, y = avg_score, fill = Sex_Code_Text, facet = Sex_Code_Text)) +
+ggplot(sex_race_score_recidivism, aes(x = Ethnic_Code_Text, y = avg_score, fill = Sex_Code_Text)) +
   geom_bar(stat = 'identity', position = 'dodge') +
   labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
-  facet_wrap(. ~ DisplayText) +
   theme_minimal()
 ```
