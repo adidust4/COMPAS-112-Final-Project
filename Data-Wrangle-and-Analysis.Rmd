@@ -120,3 +120,11 @@ ggplot(sex_race_score_recidivism, aes(x = Ethnic_Code_Text, y = avg_score, fill 
   labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
   theme_minimal()
 ```
+
+```{r finn-numerical-summaries}
+table(scores$Sex_Code_Text)
+table(scores$Ethnic_Code_Text)
+table(scores$MaritalStatus)
+table(scores$DisplayText)
+table(scores$DecileScore)
+```
