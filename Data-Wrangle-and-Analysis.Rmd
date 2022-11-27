@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
+library(scales)
+library("ggpubr")
 ```
 
 ```{r read-files}
@@ -20,6 +22,17 @@ scores <- read.csv('compas-scores-raw.csv') %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "Oriental","Asian", Ethnic_Code_Text))
 violent <- read.csv('cox-violent-parsed.csv')
 fair_ml <- read.csv('propublica_data_for_fairml.csv')
+```
+
+```{r}
+recidivism <- scores %>%
+  filter(DisplayText == "Risk of Recidivism") 
+
+violence <- scores %>%
+  filter(DisplayText == "Risk of Violence") 
+
+fail_appear <- scores %>%
+  filter(DisplayText == "Risk of Failure to Appear")
 ```
 
 ```{r sex-score}
@@ -128,3 +141,54 @@ table(scores$MaritalStatus)
 table(scores$DisplayText)
 table(scores$DecileScore)
 ```
+
+
+
+
+```{r}
+clean <- scores %>% 
+  filter(DecileScore > 0, DecileScore <= 10) %>%
+  mutate(color = case_when(DecileScore < 6 ~ "Unlikely",
+  (DecileScore >= 6 & DecileScore < 8) ~ "Probable",
+  DecileScore >= 8 ~ "Likely")) %>%
+  mutate(DecileScore = as.character(DecileScore))
+
+clean$DecileScore = factor(clean$DecileScore, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+
+bar <- ggplot(clean, aes(x = DecileScore, fill = color)) + 
+  geom_bar() + 
+  scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B"))
+
+dense <- ggplot(clean, aes(x = RawScore)) + 
+  geom_density()
+
+ggarrange(bar, dense, labels = c("Decile Score Distribution", "Raw Score Distribution"), ncol = 1, nrow = 2)
+```
+
+
+```{r}
+clean_recid <- clean %>% filter(DisplayText == "Risk of Recidivism")
+clean_violence <- clean %>% filter(DisplayText == "Risk of Violence")
+clean_fail_appr <- clean %>% filter(DisplayText == "Risk of Failure to Appear")
+
+bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = color)) + 
+  geom_bar() + 
+  scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) +
+  labs(title = "Recidivism Scores")
+
+bar_violence <- ggplot(clean_violence, aes(x = DecileScore, fill = color)) + 
+  geom_bar() + 
+  scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) + 
+  labs(title = "Violence Scores") + 
+  theme(legend.position = "none")
+
+bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = color)) + 
+  geom_bar() + 
+  scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) + 
+  labs(title = "Failure to Appear Scores") + 
+  theme(legend.position = "none")
+
+ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
+```
+
+
