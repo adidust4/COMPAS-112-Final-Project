@@ -130,7 +130,7 @@ sex_race_score_recidivism <- scores %>%
   group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
   summarize(avg_score = mean(DecileScore))
 
-ggplot(sex_race_score_recidivism, aes(x = Ethnic_Code_Text, y = avg_score, fill = Sex_Code_Text)) +
+ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
   geom_bar(stat = 'identity', position = 'dodge') +
   labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
   theme_minimal()
@@ -143,9 +143,6 @@ table(scores$MaritalStatus)
 table(scores$DisplayText)
 table(scores$DecileScore)
 ```
-
-
-
 
 ```{r}
 clean <- scores %>% 
@@ -166,7 +163,6 @@ dense <- ggplot(clean, aes(x = RawScore)) +
 
 ggarrange(bar, dense, labels = c("Decile Score Distribution", "Raw Score Distribution"), ncol = 1, nrow = 2)
 ```
-
 
 ```{r}
 clean_recid <- clean %>% filter(DisplayText == "Risk of Recidivism")
@@ -201,8 +197,6 @@ recid_test <- clean_recid[ind == 2,] %>% select(Agency_Text, Sex_Code_Text, Ethn
 recid_train <- clean_recid[ind == 1,]
 recid_test <- clean_recid[ind == 2,]
 
-tree <- rpart(ScoreText ~., data = recid_train, cp = 0.1)
-rpart.plot(tree)
+# tree <- rpart(ScoreText ~., data = recid_train, cp = 0.1)
+# rpart.plot(tree)
 ```
-
-

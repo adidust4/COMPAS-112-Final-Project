@@ -17,10 +17,15 @@ clean <- scores %>%
   mutate(DecileScore = as.character(DecileScore))
 clean$DecileScore = factor(clean$DecileScore, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
 
-## clean datasets based on type of score
+# clean datasets based on type of score
 clean_recid <- clean %>% filter(DisplayText == "Risk of Recidivism")
 clean_violence <- clean %>% filter(DisplayText == "Risk of Violence")
 clean_fail_appr <- clean %>% filter(DisplayText == "Risk of Failure to Appear")
+
+# Dataset grouping by race and sex
+sex_race_score_recidivism <- scores %>%
+  group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
+  summarize(avg_score = mean(DecileScore))
 
 library(shiny)
 
@@ -45,6 +50,8 @@ ui <- fluidPage(
       p("The algorithm takes the answers from the survey given and assigns them a weight (which is proprietary and unknown). Together, a sort of linear regression model is evaluated to decide on the final raw score. The categories from the survey include questions on criminal involvement, relationships and lifestyle, personality and attitudes, family, and social exclusion. Some of these questions are related to criminal history. Others are questions seemingly unrelated to personal history, including questions on moral beliefs (e.g. Do you agree with the following: “The law doesn’t help average people.”). Others are strongly correlated with race, such that even if race isn’t an included category technically, it’s still relevant to the scoring system due to racism inherent in the prison pipeline (e.g. “Were any of the adults who raised you ever arrested, that you know of?”)."),
       p("The plots below show the distribution of Decile Scores for each type of risk factor in the dataset."),
       plotOutput("ScoreByType"),
+      p("The following plot shows the distribution of Decile scores based on race and sex."),
+      plotOutput("ScoreByRaceSex"),
     )
 )
 
@@ -85,6 +92,13 @@ server <- function(input, output) {
       theme(legend.position = "none")
     # pannel of charts
     ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
+  })
+  
+  output$ScoreByRaceSex <- renderPlot({
+  ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
+    geom_bar(stat = 'identity', position = 'dodge') +
+    labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
+    theme_minimal()
   })
   
 }
