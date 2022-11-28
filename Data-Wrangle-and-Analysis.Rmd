@@ -13,7 +13,9 @@ library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(scales)
-library("ggpubr")
+library(ggpubr)
+library(rpart)
+library(rpart.plot)
 ```
 
 ```{r read-files}
@@ -189,6 +191,18 @@ bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = color)) +
   theme(legend.position = "none")
 
 ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
+```
+
+```{r}
+ind <- sample(2, nrow(clean_recid), replace = T, prob = c(0.8, 0.2))
+recid_train <- clean_recid[ind == 1,] %>% select(Agency_Text, Sex_Code_Text, Ethnic_Code_Text, DateOfBirth, ScaleSet, AssessmentReason, Language, LegalStatus, CustodyStatus, ScoreText)
+recid_test <- clean_recid[ind == 2,] %>% select(Agency_Text, Sex_Code_Text, Ethnic_Code_Text, DateOfBirth, ScaleSet, AssessmentReason, Language, LegalStatus, CustodyStatus, ScoreText)
+
+recid_train <- clean_recid[ind == 1,]
+recid_test <- clean_recid[ind == 2,]
+
+tree <- rpart(ScoreText ~., data = recid_train, cp = 0.1)
+rpart.plot(tree)
 ```
 
 
