@@ -27,6 +27,11 @@ sex_race_score_recidivism <- scores %>%
   group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
   summarize(avg_score = mean(DecileScore))
 
+# Dataset grouping marital status
+marital_status_recidivism <- scores %>% 
+  group_by(MaritalStatus) %>% 
+  summarize(avg_score = mean(DecileScore))
+
 library(shiny)
 
 # Define UI for application that draws a histogram
@@ -52,6 +57,8 @@ ui <- fluidPage(
       plotOutput("ScoreByType"),
       p("The following plot shows the distribution of Decile scores based on race and sex."),
       plotOutput("ScoreByRaceSex"),
+      p("The following plot shows the distribution of Decile scores based on marital status."),
+      plotOutput("ScoreByMaritalStatus")
     )
 )
 
@@ -99,6 +106,13 @@ server <- function(input, output) {
     geom_bar(stat = 'identity', position = 'dodge') +
     labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
     theme_minimal()
+  })
+  
+  output$ScoreByMaritalStatus <- renderPlot({
+    ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y = avg_score, fill = MaritalStatus)) +
+      geom_bar(stat = 'identity') +
+      labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score", fill = "Sex") +
+      theme_minimal()
   })
   
 }
