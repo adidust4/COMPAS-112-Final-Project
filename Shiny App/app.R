@@ -36,6 +36,12 @@ percent_scores <- scores %>%
   summarize(total_percent = n()/total) %>%
   filter(ScoreText != "N/A") 
 
+# Dataset grouping marital status
+marital_status_recidivism <- scores %>% 
+  group_by(MaritalStatus) %>% 
+  summarize(avg_score = mean(DecileScore))
+
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
@@ -61,6 +67,8 @@ ui <- fluidPage(
       plotOutput("ScoreByType"),
       p("The following plot shows the distribution of Decile scores based on race and sex."),
       plotOutput("ScoreByRaceSex"),
+      p("The following plot shows the distribution of Decile scores based on marital status."),
+      plotOutput("ScoreByMaritalStatus")
     )
 )
 
@@ -109,13 +117,19 @@ server <- function(input, output) {
     labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
     theme_minimal()
   })
-  
+
   output$ScoreDistribution <- renderPlot({
     ggplot(percent_scores, aes(x = reorder(ScoreText, -total_percent), y = total_percent, fill = ScoreText)) + 
       geom_col() +
       facet_wrap(~DisplayText) + 
       labs(x = "Risk Score Given", y = "Percent of Population", title = "Distribution of Scores Given By Risk Type") + 
-      guides(fill = guide_legend(title = "Score Given"))
+      guides(fill = guide_legend(title = "Score Given")) })
+
+  output$ScoreByMaritalStatus <- renderPlot({
+    ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y = avg_score, fill = MaritalStatus)) +
+      geom_bar(stat = 'identity') +
+      labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score", fill = "Sex") +
+      theme_minimal()
   })
   
 }
