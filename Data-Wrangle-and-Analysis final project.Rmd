@@ -118,10 +118,10 @@ mean(scores1.1$DecileScore)
 ```
 
 ```{r}
-violent1 <- violent %>% select(race, sex, age_cat, score_text) %>% group_by(race,sex,age_cat,score_text) %>% summarise(count=n()) %>% na.omit()
+violent1 <- violent %>% filter(score_text==c("High","Medium","Low")) %>% select(race, sex, age_cat, score_text) %>% group_by(race,sex,age_cat,score_text) %>% summarise(count=n()) 
 ```
 ```{r}
-ggplot(violent1, aes(x=score_text,y=count,fill=race)) +geom_bar(stat="identity") + facet_wrap("age_cat") + xlab("risk level of recidivism")
+ggplot(violent1, aes(x=factor(score_text, level=c('Low', 'Medium','High')),y=count,fill=race)) +geom_bar(stat="identity") + facet_wrap(~factor(age_cat, levels=c('Greater than 45','25 - 45','Less than 25'))) + xlab("risk level of recidivism") 
 ```
 
  
