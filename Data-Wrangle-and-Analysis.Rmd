@@ -127,7 +127,7 @@ ggplot(race_scores_all, aes(fill=`Score Type`, y=avg_score, x=reorder(Ethnic_Cod
 
 ```{r finn-viz}
 sex_race_score_recidivism <- scores %>%
-  group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
+  group_by(Sex_Code_Text, Ethnic_Code_Text) %>%
   summarize(avg_score = mean(DecileScore))
 
 ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
@@ -143,6 +143,16 @@ ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y 
   geom_bar(stat = 'identity') +
   labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score", fill = "Sex") +
   theme_minimal()
+
+maritalstatus_race_sex_recidivism <- scores %>% 
+  group_by(Ethnic_Code_Text, MaritalStatus) %>% 
+  summarize(avg_score = mean(DecileScore))
+
+ggplot(maritalstatus_race_sex_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = MaritalStatus)) +
+  geom_bar(stat = 'identity', position = 'identity', alpha = 0.5) +
+  labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", color = "Marital Status") +
+  theme_minimal() + 
+  scale_fill_grey()
 ```
 
 ```{r finn-numerical-summaries}
