@@ -2,6 +2,7 @@ source("helpers.R")
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
+library(shiny)
 
 # Dataset of all Scores variables
 scores <- read.csv('compas-scores-raw.csv') %>%
@@ -27,7 +28,13 @@ sex_race_score_recidivism <- scores %>%
   group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
   summarize(avg_score = mean(DecileScore))
 
-library(shiny)
+# Dataset of Score distribution
+percent_scores <- scores %>%
+  group_by(ScoreText) %>%
+  summarize(total = n(), DisplayText) %>%
+  group_by(DisplayText, ScoreText) %>%
+  summarize(total_percent = n()/total) %>%
+  filter(ScoreText != "N/A") 
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -47,6 +54,8 @@ ui <- fluidPage(
       p("The COMPAS algorithm determines risk factors based on scores derived from questionnaires and biographical data. The software reports a raw score and a decile score. The raw score is not directly interpretable, but low numbers indicate low risk and high numbers indicate high-risk scores. The decile scores are integers between 1 and 10. A decile score of 1 signifies that the individual has a risk score greater than 0% and less than 10% of the average score. The scores are roughly correlated to different measures of qualitative risk. A score from 1-4 represents low risk, a score from 5-7 represents a medium risk, and a score from 8-10 represents a high risk. The risk for recidivism types have a slightly different language, with 1-5 being unlikely, 6-7 being probable, and 8-10 being likely."),
       p("The following plot shows the distribution of Decile and Raw Scores from the COMPAS dataset."),
       plotOutput("AllScores"),
+      p("The overall distribution of scores tends to skew towards low risk."),
+      plotOutput("ScoreDistribution"),
       p("The algorithm takes the answers from the survey given and assigns them a weight (which is proprietary and unknown). Together, a sort of linear regression model is evaluated to decide on the final raw score. The categories from the survey include questions on criminal involvement, relationships and lifestyle, personality and attitudes, family, and social exclusion. Some of these questions are related to criminal history. Others are questions seemingly unrelated to personal history, including questions on moral beliefs (e.g. Do you agree with the following: “The law doesn’t help average people.”). Others are strongly correlated with race, such that even if race isn’t an included category technically, it’s still relevant to the scoring system due to racism inherent in the prison pipeline (e.g. “Were any of the adults who raised you ever arrested, that you know of?”)."),
       p("The plots below show the distribution of Decile Scores for each type of risk factor in the dataset."),
       plotOutput("ScoreByType"),
@@ -99,6 +108,14 @@ server <- function(input, output) {
     geom_bar(stat = 'identity', position = 'dodge') +
     labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
     theme_minimal()
+  })
+  
+  output$ScoreDistribution <- renderPlot({
+    ggplot(percent_scores, aes(x = reorder(ScoreText, -total_percent), y = total_percent, fill = ScoreText)) + 
+      geom_col() +
+      facet_wrap(~DisplayText) + 
+      labs(x = "Risk Score Given", y = "Percent of Population", title = "Distribution of Scores Given By Risk Type") + 
+      guides(fill = guide_legend(title = "Score Given"))
   })
   
 }

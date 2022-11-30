@@ -200,3 +200,22 @@ recid_test <- clean_recid[ind == 2,]
 # tree <- rpart(ScoreText ~., data = recid_train, cp = 0.1)
 # rpart.plot(tree)
 ```
+
+
+```{r}
+# total_ppl = /ncol(scores)
+
+percent_scores <- scores %>%
+  group_by(ScoreText) %>%
+  summarize(total = n(), DisplayText) %>%
+  group_by(DisplayText, ScoreText) %>%
+  summarize(total_percent = n()/total) %>%
+  filter(ScoreText != "N/A") 
+
+ggplot(percent_scores, aes(x = reorder(ScoreText, -total_percent), y = total_percent, fill = ScoreText)) + 
+  geom_col() +
+  facet_wrap(~DisplayText) + 
+  labs(x = "Risk Score Given", y = "Percent of Population", title = "Distribution of Scores Given By Risk Type") + 
+  guides(fill = guide_legend(title = "Score Given"))
+```
+
