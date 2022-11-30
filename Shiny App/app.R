@@ -41,6 +41,15 @@ marital_status_recidivism <- scores %>%
   group_by(MaritalStatus) %>% 
   summarize(avg_score = mean(DecileScore))
 
+set.seed(229)
+
+# decision tree datasets
+ind <- sample(2, nrow(recidivism), replace = T, prob = c(0.8, 0.2))
+recid_train <- recidivism[ind == 1,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText) %>% filter(ScoreText != "N/A")
+recid_test <- recidivism[ind == 2,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText)%>% filter(ScoreText != "N/A")
+recid_train <- recid_train[ind == 1,]
+recid_test <- recid_test[ind == 2,]
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -68,7 +77,8 @@ ui <- fluidPage(
       p("The following plot shows the distribution of Decile scores based on race and sex."),
       plotOutput("ScoreByRaceSex"),
       p("The following plot shows the distribution of Decile scores based on marital status."),
-      plotOutput("ScoreByMaritalStatus")
+      plotOutput("ScoreByMaritalStatus"),
+      plotOutput("DecisionTree")
     )
 )
 
@@ -130,6 +140,11 @@ server <- function(input, output) {
       geom_bar(stat = 'identity') +
       labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score", fill = "Sex") +
       theme_minimal()
+  })
+  
+  output$DecisionTree <- renderPlot ({
+    tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
+    rpart.plot(tree, box.palette = list("Reds", "Greens", "Oranges"), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
   })
   
 }

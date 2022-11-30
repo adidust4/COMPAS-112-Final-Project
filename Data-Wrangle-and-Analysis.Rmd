@@ -209,15 +209,17 @@ ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2,
 ```
 
 ```{r}
-ind <- sample(2, nrow(clean_recid), replace = T, prob = c(0.8, 0.2))
-recid_train <- clean_recid[ind == 1,] %>% select(Agency_Text, Sex_Code_Text, Ethnic_Code_Text, DateOfBirth, ScaleSet, AssessmentReason, Language, LegalStatus, CustodyStatus, ScoreText)
-recid_test <- clean_recid[ind == 2,] %>% select(Agency_Text, Sex_Code_Text, Ethnic_Code_Text, DateOfBirth, ScaleSet, AssessmentReason, Language, LegalStatus, CustodyStatus, ScoreText)
+set.seed(229)
 
-recid_train <- clean_recid[ind == 1,]
-recid_test <- clean_recid[ind == 2,]
+ind <- sample(2, nrow(recidivism), replace = T, prob = c(0.8, 0.2))
+recid_train <- recidivism[ind == 1,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText) %>% filter(ScoreText != "N/A")
+recid_test <- recidivism[ind == 2,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText)%>% filter(ScoreText != "N/A")
 
-# tree <- rpart(ScoreText ~., data = recid_train, cp = 0.1)
-# rpart.plot(tree)
+recid_train <- recid_train[ind == 1,]
+recid_test <- recid_test[ind == 2,]
+
+tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
+rpart.plot(tree, box.palette = list("Reds", "Greens", "Oranges"), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
 ```
 
 
