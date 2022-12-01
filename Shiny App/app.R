@@ -3,6 +3,12 @@ library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(shiny)
+library(shinythemes)
+library(ggpubr)
+library(scales)
+library(ggpubr)
+library(rpart)
+library(rpart.plot)
 
 # Dataset of all Scores variables
 scores <- read.csv('compas-scores-raw.csv') %>%
@@ -12,9 +18,7 @@ scores <- read.csv('compas-scores-raw.csv') %>%
 # Dataset with decile factor scores
 clean <- scores %>% 
   filter(DecileScore > 0, DecileScore <= 10) %>%
-  mutate(Risk = case_when(DecileScore < 6 ~ "Unlikely",
-                           (DecileScore >= 6 & DecileScore < 8) ~ "Probable",
-                           DecileScore >= 8 ~ "Likely")) %>%
+  mutate(Risk = ScoreText) %>%
   mutate(DecileScore = as.character(DecileScore))
 clean$DecileScore = factor(clean$DecileScore, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
 
@@ -50,13 +54,67 @@ recid_test <- recidivism[ind == 2,] %>% mutate(Race = Ethnic_Code_Text, Sex = Se
 recid_train <- recid_train[ind == 1,]
 recid_test <- recid_test[ind == 2,]
 
+# app pallete
+red <- "#fd7f6f"
+orange <- "#ffb55a"
+pink <- "#fdcce5"
+yellow <- "#ffee65"
+green <- "#b2e061"
+light_blue <- "#8bd3c7"
+purple <- "#bd7ebe"
+
+risk_palette <- c(red, green, yellow)
+sex_palette <- c(red, light_blue)
+palette7 <- c(red, orange, pink, yellow, green, light_blue, purple)
+
+#Define custom theme function
+our_theme <- function(){ 
+  font <- "Georgia"
+  
+  theme_minimal() %+replace%    #replace elements we want to change
+    
+    theme(
+      
+      #grid elements
+      panel.grid.minor = element_blank(),    
+      axis.ticks = element_blank(),          
+      
+      #text elements
+      plot.title = element_text(             #title
+        family = font,            #set font family
+        size = 20,                #set font size
+        face = 'bold',            #bold typeface
+        hjust = 0,                #left align
+        vjust = 2),               #raise slightly
+      
+      plot.subtitle = element_text(          #subtitle
+        family = font,            #font family
+        size = 14),               #font size
+      
+      plot.caption = element_text(           #caption
+        family = font,            #font family
+        size = 9,                 #font size
+        hjust = 1),               #right align
+      
+      axis.title = element_text(             #axis titles
+        family = font,            #font family
+        size = 10),               #font size
+      
+      axis.text = element_text(              #axis text
+        family = font,            #axis famuly
+        size = 9),                #font size
+      
+      axis.text.x = element_text(            #margin for axis text
+        margin=margin(5, b = 10))
+    )
+}
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+    theme = shinytheme("readable"),
 
     # Application title
     titlePanel("COMPAS Scores"),
-
 
     # Show a plot of the generated distribution
     mainPanel(
@@ -89,12 +147,14 @@ server <- function(input, output) {
     # bar plot of decile scores
     bar <- ggplot(clean, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
-      scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) + 
-      labs(title = "Decile Score Distribution", x = "Decile Scores")
+      scale_fill_manual(values = risk_palette) + 
+      labs(title = "Decile Score Distribution", x = "Decile Scores")+
+      our_theme()
     # density plot of raw scores
     dense <- ggplot(clean, aes(x = RawScore)) + 
       geom_density() + 
-      labs(title = "Raw Score Distribution", x = "Raw Scores")
+      labs(title = "Raw Score Distribution", x = "Raw Scores")+
+      our_theme()
     # pannel of charts
     ggarrange(bar, dense,  ncol = 1, nrow = 2)
   })
@@ -103,18 +163,19 @@ server <- function(input, output) {
     # bar plot of recidivism scores distribution
     bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
-      scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) +
-      labs(title = "Recidivism Scores", x = "Decile Score Distribution")
+      scale_fill_manual(values=risk_palette) +
+      labs(title = "Recidivism Scores", x = "Decile Score Distribution")+
+      our_theme()
     # bar plot of violence scores distribution
     bar_violence <- ggplot(clean_violence, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
-      scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) + 
+      scale_fill_manual(values=risk_palette) + 
       labs(title = "Violence Scores", x = "Decile Score Distribution") + 
       theme(legend.position = "none")
     # bar plot of failure to appear scores distribution
     bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
-      scale_fill_manual(values=c("#ED2938", "#FFE733", "#024E1B")) + 
+      scale_fill_manual(values=risk_palette) + 
       labs(title = "Failure to Appear Scores", x = "Decile Score Distribution") + 
       theme(legend.position = "none")
     # pannel of charts
@@ -125,26 +186,31 @@ server <- function(input, output) {
   ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
     geom_bar(stat = 'identity', position = 'dodge') +
     labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
-    theme_minimal()
+    scale_fill_manual(values = sex_palette) +
+    our_theme()
   })
 
   output$ScoreDistribution <- renderPlot({
     ggplot(percent_scores, aes(x = reorder(ScoreText, -total_percent), y = total_percent, fill = ScoreText)) + 
       geom_col() +
       facet_wrap(~DisplayText) + 
+      scale_fill_manual(values=risk_palette) +
       labs(x = "Risk Score Given", y = "Percent of Population", title = "Distribution of Scores Given By Risk Type") + 
-      guides(fill = guide_legend(title = "Score Given")) })
+      guides(fill = guide_legend(title = "Score Given")) +
+      our_theme()
+    }) 
 
   output$ScoreByMaritalStatus <- renderPlot({
     ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y = avg_score, fill = MaritalStatus)) +
       geom_bar(stat = 'identity') +
-      labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score", fill = "Sex") +
-      theme_minimal()
+      scale_fill_manual(values = palette7) +
+      labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score") +
+      theme(legend.position = "none")
   })
   
   output$DecisionTree <- renderPlot ({
     tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
-    rpart.plot(tree, box.palette = list("Reds", "Greens", "Oranges"), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
+    rpart.plot(tree, box.palette = list(red, yellow, green), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
   })
   
 }
