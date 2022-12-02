@@ -203,6 +203,7 @@ ggplot(maritalstatus_race_sex_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg
 ```
 
 ```{r finn-numerical-summaries}
+nrow(scores)
 table(scores$Sex_Code_Text)
 table(scores$Ethnic_Code_Text)
 table(scores$MaritalStatus)
