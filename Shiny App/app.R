@@ -172,13 +172,15 @@ server <- function(input, output) {
       geom_bar() + 
       scale_fill_manual(values=risk_palette) + 
       labs(title = "Violence Scores", x = "Decile Score Distribution") + 
-      theme(legend.position = "none")
+      guides(Risk = FALSE) + 
+      our_theme()
     # bar plot of failure to appear scores distribution
     bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
       scale_fill_manual(values=risk_palette) + 
       labs(title = "Failure to Appear Scores", x = "Decile Score Distribution") + 
-      theme(legend.position = "none")
+      guides(Risk = FALSE) + 
+      our_theme()
     # pannel of charts
     ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
   })
@@ -206,7 +208,8 @@ server <- function(input, output) {
       geom_bar(stat = 'identity') +
       scale_fill_manual(values = palette7) +
       labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score") +
-      theme(legend.position = "none")
+      guides(MaritalStatus = FALSE) + 
+      our_theme()
   })
   
   output$DecisionTree <- renderPlot ({
