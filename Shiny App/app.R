@@ -48,9 +48,9 @@ marital_status_recidivism <- scores %>%
 set.seed(229)
 
 # decision tree datasets
-ind <- sample(2, nrow(recidivism), replace = T, prob = c(0.8, 0.2))
-recid_train <- recidivism[ind == 1,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText) %>% filter(ScoreText != "N/A")
-recid_test <- recidivism[ind == 2,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText)%>% filter(ScoreText != "N/A")
+ind <- sample(2, nrow(clean), replace = T, prob = c(0.8, 0.2))
+recid_train <- clean[ind == 1,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText) %>% filter(ScoreText != "N/A")
+recid_test <- clean[ind == 2,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText)%>% filter(ScoreText != "N/A")
 recid_train <- recid_train[ind == 1,]
 recid_test <- recid_test[ind == 2,]
 
@@ -137,7 +137,9 @@ ui <- fluidPage(
       plotOutput("ScoreByRaceSex"),
       p("The following plot shows the distribution of Decile scores based on marital status."),
       plotOutput("ScoreByMaritalStatus"),
-      plotOutput("DecisionTree")
+      plotOutput("DecisionTree"),
+      h1("Conclusion"),
+      p("In conclusion, the COMPAS algorithm shows clear reinforcement of existing race and sex-based prejudice in the legal system. While there are differing sample sizes for different demographics, there are a disproportionate number of African Americans and men in general within the dataset. This also means that a disproportionate number of people in the Broward County inmate system are African American and/or male to begin with. The COMPAS algorithm scores show that Native Americans (of whom there are very few within the dataset) are at the highest risk of recidivism, followed by African Americans. White and hispanic inmates, however, have a much lower risk of recidivism, with an over 1 point lower average COMPAS score. There is also a clear disparity in sex, with inmates identified in the dataset as Arabic having the biggest difference between men and women. Arabic men have a COMPAS score that is roughly double, on average, that of Arabic women. Similar trends can be seen when looking at marital status, with single people having the highest COMPAS scores on average, and married people having the lowest. The difference between these is also well over 1 point. While slight disparities in the scores could be attributed to a smaller sample size for some demographics over others, none of that would explain some of the extreme differences in COMPAS scores. There is clear evidence in this dataset of unfair treatment, expectations of marginalized populations, and a general racist prejudice within the Broward County legal system that is either contributing to, or being contributed to by these COMPAS scores."),
     )
 )
 
