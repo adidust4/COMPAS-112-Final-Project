@@ -242,6 +242,13 @@ server <- function(input, output) {
     ggplot(interactiveDF(), aes(x = Ethnic_Code_Text, fill = ScoreText))+
       geom_bar(position="fill", stat = "count") +
       scale_fill_manual(values = risk_palette) + 
+      geom_label(
+        aes(label=..count..),
+        stat='count',
+        position='fill',
+        format_string='{:.1f}%',
+        size=2,
+      ) + 
       our_theme()
   })
   
