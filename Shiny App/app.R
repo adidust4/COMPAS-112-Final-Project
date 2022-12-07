@@ -146,6 +146,11 @@ ui <- fluidPage(
         h1("Predicting Recidivism Risk"),
         p("Although this decision tree is rather overfit with high complexity, it does give us a good idea of which variables contribute most to the algorithm recidivism risk ratings. Branches nearer to the top have a higher contribution to the decisions made by the tree. For this tree, we included all demographic variables included in the dataset. These include binary sex, race, the reason for assesment, language spoken, and the individual’s legal status (post-trial, pre-trial, etc). As you can see, scores are more likely to be low risk than high or medium risk. The first big predictor of recidivism risk was whether or not the individual was African-American or Native American. If the individual was not identified as either of these races, the algorithm was most likely to predict low risk. The next biggest predictor for recidivism risk was sex. The COMPAS documentation explicitly mentions sex as part of their model, so there is no surprise that it ended up so high on the tree. The next most important predictor was legal status and finally if the individual was African-America or Native American. The race of individuals is not directly included in the algorithm, so their presence as a main predictor of recidivism is very alarming and telling of correlations between questions asked and individuals’ race."),
         plotOutput("DecisionTree"),
+        h1("Interactive"),
+        selectInput("riskType", "Type of Risk", c("Risk of Recidivism", "Risk of Violence", "Risk of Failure to Appear")),
+        selectInput("sex", "Sex", c("Female", "Male")),
+        selectInput("marital", "Marital Status", c("Single", "Significant Other", "Widowed", "Separated", "Unknown", "Divorced", "Married")),
+        plotOutput("interactive"),
         h1("Conclusion"),
         p("In conclusion, the COMPAS algorithm shows clear reinforcement of existing race and sex-based prejudice in the legal system. While there are differing sample sizes for different demographics, there are a disproportionate number of African Americans and men in general within the dataset. This also means that a disproportionate number of people in the Broward County inmate system are African American and/or male to begin with. The COMPAS algorithm scores show that Native Americans (of whom there are very few within the dataset) are at the highest risk of recidivism, followed by African Americans. White and hispanic inmates, however, have a much lower risk of recidivism, with an over 1 point lower average COMPAS score. There is also a clear disparity in sex, with inmates identified in the dataset as Arabic having the biggest difference between men and women. Arabic men have a COMPAS score that is roughly double, on average, that of Arabic women. Similar trends can be seen when looking at marital status, with single people having the highest COMPAS scores on average, and married people having the lowest. The difference between these is also well over 1 point. While slight disparities in the scores could be attributed to a smaller sample size for some demographics over others, none of that would explain some of the extreme differences in COMPAS scores. There is clear evidence in this dataset of unfair treatment, expectations of marginalized populations, and a general racist prejudice within the Broward County legal system that is either contributing to, or being contributed to by these COMPAS scores."),
       )
@@ -226,6 +231,17 @@ server <- function(input, output) {
   output$DecisionTree <- renderPlot ({
     tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
     rpart.plot(tree, box.palette = list(red, green, yellow), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
+  })
+  
+  interactiveDF <- reactive({
+    scores %>%
+      filter(DisplayText == input$riskType, Sex_Code_Text == input$sex, MaritalStatus == input$marital, ScoreText != "N/A")
+  })
+  
+  output$interactive <- renderPlot({
+    ggplot(interactiveDF(), aes(x = Ethnic_Code_Text, fill = ScoreText))+
+      geom_bar(position="fill", stat = "count") +
+      scale_fill_manual(values = risk_palette)
   })
   
 }
