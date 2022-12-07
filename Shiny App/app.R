@@ -241,7 +241,8 @@ server <- function(input, output) {
   output$interactive <- renderPlot({
     ggplot(interactiveDF(), aes(x = Ethnic_Code_Text, fill = ScoreText))+
       geom_bar(position="fill", stat = "count") +
-      scale_fill_manual(values = risk_palette)
+      scale_fill_manual(values = risk_palette) + 
+      our_theme()
   })
   
 }
