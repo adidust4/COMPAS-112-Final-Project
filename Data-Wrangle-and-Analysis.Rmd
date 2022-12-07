@@ -18,6 +18,53 @@ library(rpart)
 library(rpart.plot)
 ```
 
+```{r}
+# app pallete
+our_colors <- c(`red` = "#F94144", `orange` = "#F3722C", `orange_yellow` = "#F8961E", `pink` = "#F9844A", `yellow` = "#F9C74F", `green` = "#90BE6D", `teal` = "#43AA8B", `light_blue` = "#4D908E", `purple` = "#577590", `blue` = "#277DA1")
+
+palette_colors <- function(...) {
+  cols <- c(...)
+  if (is.null(cols))
+    return (our_colors)
+  our_colors[cols]
+}
+
+palettes <- list(
+  `risk` = palette_colors("red", "yellow", "green")
+)
+
+our_pal <- function(palette = "main", reverse = FALSE, ...) {
+  pal <- palettes[[palette]]
+  if (reverse) pal <- rev(pal)
+  colorRampPalette(pal, ...)
+}
+
+scale_color <- function(palette = "main",
+                                   discrete = TRUE,
+                                   reverse = FALSE,
+                                   ...) {
+  pal <- our_pal(palette = palette, reverse = reverse)
+  
+  if (discrete) {
+    discrete_scale("colour", paste0("our_", palette), palette = pal, ...)
+  } else {
+    scale_color_gradientn(colours = pal(256), ...)
+  }
+}
+
+scale_fill_splashdown <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+  pal <- our_pal(palette = palette, reverse = reverse)
+  
+  if (discrete) {
+    discrete_scale("fill", paste0("our_", palette), palette = pal, ...)
+  } else {
+    scale_fill_gradientn(colours = pal(256), ...)
+  }
+}
+
+
+```
+
 ```{r read-files}
 scores <- read.csv('compas-scores-raw.csv') %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
@@ -127,7 +174,7 @@ ggplot(race_scores_all, aes(fill=`Score Type`, y=avg_score, x=reorder(Ethnic_Cod
 
 ```{r finn-viz}
 sex_race_score_recidivism <- scores %>%
-  group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
+  group_by(Sex_Code_Text, Ethnic_Code_Text) %>%
   summarize(avg_score = mean(DecileScore))
 
 ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
@@ -143,9 +190,20 @@ ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y 
   geom_bar(stat = 'identity') +
   labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score", fill = "Sex") +
   theme_minimal()
+
+maritalstatus_race_sex_recidivism <- scores %>% 
+  group_by(Ethnic_Code_Text, MaritalStatus) %>% 
+  summarize(avg_score = mean(DecileScore))
+
+ggplot(maritalstatus_race_sex_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = MaritalStatus)) +
+  geom_bar(stat = 'identity', position = 'identity', alpha = 0.5) +
+  labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", color = "Marital Status") +
+  theme_minimal() + 
+  scale_fill_grey()
 ```
 
 ```{r finn-numerical-summaries}
+nrow(scores)
 table(scores$Sex_Code_Text)
 table(scores$Ethnic_Code_Text)
 table(scores$MaritalStatus)
@@ -199,13 +257,34 @@ ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2,
 ```
 
 ```{r}
-ind <- sample(2, nrow(clean_recid), replace = T, prob = c(0.8, 0.2))
-recid_train <- clean_recid[ind == 1,] %>% select(Agency_Text, Sex_Code_Text, Ethnic_Code_Text, DateOfBirth, ScaleSet, AssessmentReason, Language, LegalStatus, CustodyStatus, ScoreText)
-recid_test <- clean_recid[ind == 2,] %>% select(Agency_Text, Sex_Code_Text, Ethnic_Code_Text, DateOfBirth, ScaleSet, AssessmentReason, Language, LegalStatus, CustodyStatus, ScoreText)
+set.seed(229)
 
-recid_train <- clean_recid[ind == 1,]
-recid_test <- clean_recid[ind == 2,]
+ind <- sample(2, nrow(recidivism), replace = T, prob = c(0.8, 0.2))
+recid_train <- recidivism[ind == 1,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText) %>% filter(ScoreText != "N/A")
+recid_test <- recidivism[ind == 2,] %>% mutate(Race = Ethnic_Code_Text, Sex = Sex_Code_Text) %>% select(Sex, Race, AssessmentReason, Language, LegalStatus, ScoreText)%>% filter(ScoreText != "N/A")
 
-# tree <- rpart(ScoreText ~., data = recid_train, cp = 0.1)
-# rpart.plot(tree)
+recid_train <- recid_train[ind == 1,]
+recid_test <- recid_test[ind == 2,]
+
+tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
+rpart.plot(tree, box.palette = list("Reds", "Greens", "Oranges"), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
 ```
+
+
+```{r}
+# total_ppl = /ncol(scores)
+
+percent_scores <- scores %>%
+  group_by(ScoreText) %>%
+  summarize(total = n(), DisplayText) %>%
+  group_by(DisplayText, ScoreText) %>%
+  summarize(total_percent = n()/total) %>%
+  filter(ScoreText != "N/A") 
+
+ggplot(percent_scores, aes(x = reorder(ScoreText, -total_percent), y = total_percent, fill = ScoreText)) + 
+  geom_col() +
+  facet_wrap(~DisplayText) + 
+  labs(x = "Risk Score Given", y = "Percent of Population", title = "Distribution of Scores Given By Risk Type") + 
+  guides(fill = guide_legend(title = "Score Given"))
+```
+
