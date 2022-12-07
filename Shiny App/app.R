@@ -223,7 +223,7 @@ server <- function(input, output) {
   
   output$DecisionTree <- renderPlot ({
     tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
-    rpart.plot(tree, box.palette = list(red, yellow, green), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
+    rpart.plot(tree, box.palette = list(red, green, yellow), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
   })
   
 }
