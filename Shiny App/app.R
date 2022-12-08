@@ -242,7 +242,7 @@ server <- function(input, output) {
     ggplot(interactiveDF(), aes(x = Ethnic_Code_Text, fill = ScoreText))+
       geom_bar(position="fill", stat = "count") +
       labs(title = "Taking a Closer Look", x = "Race", y = "Proportion of Race by Score", fill = "Risk Prediction") +
-      scale_fill_manual(values = risk_palette) + 
+      scale_fill_manual(values = c("Low" = green, "Medium" = yellow, "High" = red)) + 
       geom_label(aes(label=..count..), stat='count', position='fill', size=2,) + 
       our_theme()
   })
