@@ -11,7 +11,7 @@ library(rpart)
 library(rpart.plot)
 
 # Dataset of all Scores variables
-scores <- read.csv('compas-scores-raw.csv') %>%
+scores <- read.csv('https://raw.githubusercontent.com/adidust4/COMPAS-112-Final-Project/main/compas-scores-raw.csv') %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "Oriental","Asian", Ethnic_Code_Text))
 
@@ -71,7 +71,6 @@ palette7 <- c(red, orange, pink, yellow, green, light_blue, purple)
 
 #Define custom theme function
 our_theme <- function(){ 
-  font <- "Georgia"
   
   theme_minimal() %+replace%    #replace elements we want to change
     
@@ -82,28 +81,23 @@ our_theme <- function(){
       axis.ticks = element_blank(),          
       
       #text elements
-      plot.title = element_text(             #title
-        family = font,            #set font family
+      plot.title = element_text(            #set font family
         size = 20,                #set font size
         face = 'bold',            #bold typeface
         hjust = 0,                #left align
         vjust = 2),               #raise slightly
       
-      plot.subtitle = element_text(          #subtitle
-        family = font,            #font family
+      plot.subtitle = element_text(           #font family
         size = 14),               #font size
       
-      plot.caption = element_text(           #caption
-        family = font,            #font family
+      plot.caption = element_text(       #font family
         size = 9,                 #font size
         hjust = 1),               #right align
       
-      axis.title = element_text(             #axis titles
-        family = font,            #font family
+      axis.title = element_text(   #font family
         size = 10),               #font size
       
-      axis.text = element_text(              #axis text
-        family = font,            #axis famuly
+      axis.text = element_text(       #axis famuly
         size = 9),                #font size
       
       axis.text.x = element_text(            #margin for axis text
@@ -188,14 +182,14 @@ server <- function(input, output) {
       geom_bar() + 
       scale_fill_manual(values=risk_palette) + 
       labs(title = "Violence Scores", x = "Decile Score Distribution") + 
-      guides(Risk = FALSE) + 
+      guides(Risk = "none") + 
       our_theme()
     # bar plot of failure to appear scores distribution
     bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
       scale_fill_manual(values=risk_palette) + 
       labs(title = "Failure to Appear Scores", x = "Decile Score Distribution") + 
-      guides(Risk = FALSE) + 
+      guides(Risk = "none") + 
       our_theme()
     # pannel of charts
     ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
@@ -224,7 +218,7 @@ server <- function(input, output) {
       geom_bar(stat = 'identity') +
       scale_fill_manual(values = palette7) +
       labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score") +
-      guides(MaritalStatus = FALSE) + 
+      guides(MaritalStatus = "none") + 
       our_theme()
   })
   
