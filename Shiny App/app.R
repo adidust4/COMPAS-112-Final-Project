@@ -112,7 +112,6 @@ ui <- fluidPage(
     # Application title
     titlePanel("COMPAS Scores"),
     
-
     # Show a plot of the generated distribution
     sidebarLayout(
       sidebarPanel(width = 3),
@@ -123,18 +122,18 @@ ui <- fluidPage(
         p("The demographics from the dataset do notably differ from the overall demographics for Broward County. Broward County, according to the 2020 Census, is about 30.6% African American, whereas 44.5% of the people in the dataset are African American. Additionally, the county is 50.9% female, but only about 22.9% of the people in the dataset are women."),
         # plotOutput("barPlot")
         
-        h2("COMPAS Algorithm and Scoring"),
+        h1("COMPAS Algorithm and Scoring"),
         p("The COMPAS algorithm determines risk factors based on scores derived from questionnaires and biographical data. The software reports a raw score and a decile score. The raw score is not directly interpretable, but low numbers indicate low risk and high numbers indicate high-risk scores. The decile scores are integers between 1 and 10. A decile score of 1 signifies that the individual has a risk score greater than 0% and less than 10% of the average score. The scores are roughly correlated to different measures of qualitative risk. A score from 1-4 represents low risk, a score from 5-7 represents a medium risk, and a score from 8-10 represents a high risk. The risk for recidivism types have a slightly different language, with 1-5 being unlikely, 6-7 being probable, and 8-10 being likely."),
-        p("The following plot shows the distribution of Decile and Raw Scores from the COMPAS dataset."),
+        h4("The following plots show the distribution of Decile and Raw Scores from the COMPAS dataset."),
+        h5("The overall distribution of scores tends to skew towards low risk."),
         plotOutput("AllScores"),
-        p("The overall distribution of scores tends to skew towards low risk."),
         plotOutput("ScoreDistribution"),
         p("The algorithm takes the answers from the survey given and assigns them a weight (which is proprietary and unknown). Together, a sort of linear regression model is evaluated to decide on the final raw score. The categories from the survey include questions on criminal involvement, relationships and lifestyle, personality and attitudes, family, and social exclusion. Some of these questions are related to criminal history. Others are questions seemingly unrelated to personal history, including questions on moral beliefs (e.g. Do you agree with the following: “The law doesn’t help average people.”). Others are strongly correlated with race, such that even if race isn’t an included category technically, it’s still relevant to the scoring system due to racism inherent in the prison pipeline (e.g. “Were any of the adults who raised you ever arrested, that you know of?”)."),
-        p("The plots below show the distribution of Decile Scores for each type of risk factor in the dataset."),
+        h4("The plots below show the distribution of Decile Scores for each type of risk factor in the dataset."),
         plotOutput("ScoreByType"),
-        p("The following plot shows the distribution of Decile scores based on race and sex."),
+        h4("The following plot shows the distribution of Decile scores based on race and sex."),
         plotOutput("ScoreByRaceSex"),
-        p("The following plot shows the distribution of Decile scores based on marital status."),
+        h4("The following plot shows the distribution of Decile scores based on marital status."),
         plotOutput("ScoreByMaritalStatus"),
         h1("Predicting Recidivism Risk"),
         p("Although this decision tree is rather overfit with high complexity, it does give us a good idea of which variables contribute most to the algorithm recidivism risk ratings. Branches nearer to the top have a higher contribution to the decisions made by the tree. For this tree, we included all demographic variables included in the dataset. These include binary sex, race, the reason for assesment, language spoken, and the individual’s legal status (post-trial, pre-trial, etc). As you can see, scores are more likely to be low risk than high or medium risk. The first big predictor of recidivism risk was whether or not the individual was African-American or Native American. If the individual was not identified as either of these races, the algorithm was most likely to predict low risk. The next biggest predictor for recidivism risk was sex. The COMPAS documentation explicitly mentions sex as part of their model, so there is no surprise that it ended up so high on the tree. The next most important predictor was legal status and finally if the individual was African-America or Native American. The race of individuals is not directly included in the algorithm, so their presence as a main predictor of recidivism is very alarming and telling of correlations between questions asked and individuals’ race."),
@@ -197,7 +196,7 @@ server <- function(input, output) {
   output$ScoreByRaceSex <- renderPlot({
   ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
     geom_bar(stat = 'identity', position = 'dodge') +
-    labs(title = "Risk of Recidivism Score", x = "Race", y = "Average Score", fill = "Sex") +
+    labs(x = "Race", y = "Average Score", fill = "Sex") +
     scale_fill_manual(values = sex_palette) +
     our_theme()
   })
@@ -216,7 +215,7 @@ server <- function(input, output) {
     ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y = avg_score, fill = MaritalStatus)) +
       geom_bar(stat = 'identity') +
       scale_fill_manual(values = palette7) +
-      labs(title = "Risk of Recidivism Score", x = "Marital Status", y = "Average Score") +
+      labs(x = "Marital Status", y = "Average Score") +
       guides(MaritalStatus = "none") + 
       our_theme()
   })
