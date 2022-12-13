@@ -8,6 +8,7 @@ library(scales)
 library(ggpubr)
 library(rpart)
 library(rpart.plot)
+library(rsconnect)
 
 # Dataset of all Scores variables
 scores <- read.csv('https://raw.githubusercontent.com/adidust4/COMPAS-112-Final-Project/main/compas-scores-raw.csv') %>%
@@ -29,6 +30,12 @@ clean_fail_appr <- clean %>% filter(DisplayText == "Risk of Failure to Appear")
 # Dataset grouping by race and sex
 sex_race_score_recidivism <- scores %>%
   group_by(Sex_Code_Text, Ethnic_Code_Text, DisplayText) %>%
+  summarize(avg_score = mean(DecileScore))
+
+# Dataset grouping by race
+race_scores_all <- scores %>%
+  mutate(`Score Type` = DisplayText) %>%
+  group_by(Ethnic_Code_Text, `Score Type`) %>%
   summarize(avg_score = mean(DecileScore))
 
 # Dataset of Score distribution
@@ -63,6 +70,7 @@ yellow <- "#ffee65"
 green <- "#b2e061"
 light_blue <- "#8bd3c7"
 purple <- "#bd7ebe"
+black <- "#000000"
 
 risk_palette <- c(red, green, yellow)
 sex_palette <- c(red, light_blue)
@@ -110,7 +118,7 @@ ui <- fluidPage(
     theme = shinytheme("readable"),
 
     # Application title
-    titlePanel("COMPAS Scores"),
+    titlePanel("How likely are you to go to prison: Prediction Biases"),
     
     # Show a plot of the generated distribution
     sidebarLayout(
@@ -131,6 +139,7 @@ ui <- fluidPage(
         p("The algorithm takes the answers from the survey given and assigns them a weight (which is proprietary and unknown). Together, a sort of linear regression model is evaluated to decide on the final raw score. The categories from the survey include questions on criminal involvement, relationships and lifestyle, personality and attitudes, family, and social exclusion. Some of these questions are related to criminal history. Others are questions seemingly unrelated to personal history, including questions on moral beliefs (e.g. Do you agree with the following: “The law doesn’t help average people.”). Others are strongly correlated with race, such that even if race isn’t an included category technically, it’s still relevant to the scoring system due to racism inherent in the prison pipeline (e.g. “Were any of the adults who raised you ever arrested, that you know of?”)."),
         h4("The plots below show the distribution of Decile Scores for each type of risk factor in the dataset."),
         plotOutput("ScoreByType"),
+        plotOutput("Race"),
         h4("The following plot shows the distribution of Decile scores based on race and sex."),
         plotOutput("ScoreByRaceSex"),
         h4("The following plot shows the distribution of Decile scores based on marital status."),
@@ -168,6 +177,15 @@ server <- function(input, output) {
     ggarrange(bar, dense,  ncol = 1, nrow = 2)
   })
   
+  output$Race <- renderPlot({
+    ggplot(race_scores_all, aes(fill=`Score Type`, y=avg_score, x=reorder(Ethnic_Code_Text, -avg_score))) + 
+      geom_bar(position="dodge", stat="identity") +
+      labs(title = "COMPAS Risk Score Averages By Race", x = "Race", y = "Average Score (Maximum of 10)") +
+      scale_x_discrete(guide = guide_axis(n.dodge=2)) +
+      scale_fill_manual(values = c(purple, light_blue, black)) +
+      theme_light()
+  })
+  
   output$ScoreByType <- renderPlot({
     # bar plot of recidivism scores distribution
     bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = Risk)) + 
@@ -198,6 +216,7 @@ server <- function(input, output) {
     geom_bar(stat = 'identity', position = 'dodge') +
     labs(x = "Race", y = "Average Score", fill = "Sex") +
     scale_fill_manual(values = sex_palette) +
+    scale_x_discrete(guide = guide_axis(n.dodge=2)) +
     our_theme()
   })
 
