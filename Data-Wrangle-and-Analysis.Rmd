@@ -209,6 +209,11 @@ table(scores$Ethnic_Code_Text)
 table(scores$MaritalStatus)
 table(scores$DisplayText)
 table(scores$DecileScore)
+scores2 <- scores %>% 
+  group_by(Ethnic_Code_Text) %>% 
+  summarize(percentages = n() / 60843)
+
+head(scores2, 10)
 ```
 
 ```{r}
