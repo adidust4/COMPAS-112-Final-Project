@@ -38,14 +38,6 @@ race_scores_all <- scores %>%
   group_by(Ethnic_Code_Text, `Score Type`) %>%
   summarize(avg_score = mean(DecileScore))
 
-# Dataset of Score distribution
-percent_scores <- scores %>%
-  group_by(ScoreText) %>%
-  summarize(total = n(), DisplayText) %>%
-  group_by(DisplayText, ScoreText) %>%
-  summarize(total_percent = n()/total) %>%
-  filter(ScoreText != "N/A") 
-
 # Dataset grouping marital status
 marital_status_recidivism <- scores %>% 
   group_by(MaritalStatus) %>% 
@@ -119,7 +111,7 @@ ui <- fluidPage(
 
     # Application title
     fluidRow(
-      column(7, offset = 3, align="center",
+      column(6, offset = 3, align="center",
         titlePanel("How likely are you to go to prison: Prediction Biases")
       )
     ),
@@ -138,7 +130,6 @@ ui <- fluidPage(
       h4("The following plots show the distribution of Decile and Raw Scores from the COMPAS dataset."),
       h5("The overall distribution of scores tends to skew towards low risk."),
       plotOutput("AllScores"),
-      plotOutput("ScoreDistribution"),
       p("The algorithm takes the answers from the survey given and assigns them a weight (which is proprietary and unknown). Together, a sort of linear regression model is evaluated to decide on the final raw score. The categories from the survey include questions on criminal involvement, relationships and lifestyle, personality and attitudes, family, and social exclusion. Some of these questions are related to criminal history. Others are questions seemingly unrelated to personal history, including questions on moral beliefs (e.g. Do you agree with the following: “The law doesn’t help average people.”). Others are strongly correlated with race, such that even if race isn’t an included category technically, it’s still relevant to the scoring system due to racism inherent in the prison pipeline (e.g. “Were any of the adults who raised you ever arrested, that you know of?”)."),
       h4("The plots below show the distribution of Decile Scores for each type of risk factor in the dataset."),
       plotOutput("ScoreByType"),
@@ -167,7 +158,7 @@ server <- function(input, output) {
   
   output$AllScores <- renderPlot({
     # bar plot of decile scores
-    bar <- ggplot(clean, aes(x = DecileScore, fill = Risk)) + 
+    bar <- ggplot(clean, aes(x = DecileScore, fill = ScoreText)) + 
       geom_bar() + 
       scale_fill_manual(values = risk_palette) + 
       labs(title = "Decile Score Distribution", x = "Decile Scores")+
@@ -192,20 +183,20 @@ server <- function(input, output) {
   
   output$ScoreByType <- renderPlot({
     # bar plot of recidivism scores distribution
-    bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = Risk)) + 
+    bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = ScoreText)) + 
       geom_bar() + 
       scale_fill_manual(values=risk_palette) +
       labs(title = "Recidivism Scores", x = "Decile Score Distribution")+
       our_theme()
     # bar plot of violence scores distribution
-    bar_violence <- ggplot(clean_violence, aes(x = DecileScore, fill = Risk)) + 
+    bar_violence <- ggplot(clean_violence, aes(x = DecileScore, fill = ScoreText)) + 
       geom_bar() + 
       scale_fill_manual(values=risk_palette) + 
       labs(title = "Violence Scores", x = "Decile Score Distribution") + 
       guides(Risk = "none") + 
       our_theme()
     # bar plot of failure to appear scores distribution
-    bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = Risk)) + 
+    bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = ScoreText)) + 
       geom_bar() + 
       scale_fill_manual(values=risk_palette) + 
       labs(title = "Failure to Appear Scores", x = "Decile Score Distribution") + 
@@ -224,15 +215,6 @@ server <- function(input, output) {
     our_theme()
   })
 
-  output$ScoreDistribution <- renderPlot({
-    ggplot(percent_scores, aes(x = reorder(ScoreText, -total_percent), y = total_percent, fill = ScoreText)) + 
-      geom_col() +
-      facet_wrap(~DisplayText) + 
-      scale_fill_manual(values=risk_palette) +
-      labs(x = "Risk Score Given", y = "Percent of Population", title = "Distribution of Scores Given By Risk Type") + 
-      guides(fill = guide_legend(title = "Score Given")) +
-      our_theme()
-    }) 
 
   output$ScoreByMaritalStatus <- renderPlot({
     ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y = avg_score, fill = MaritalStatus)) +
