@@ -112,7 +112,7 @@ ui <- fluidPage(
     # Application title
     fluidRow(
       column(6, offset = 3, align="center",
-        titlePanel("How likely are you to go to prison: Prediction Biases")
+        titlePanel("How likely you are to go to prison: Prediction Biases")
       )
     ),
     
