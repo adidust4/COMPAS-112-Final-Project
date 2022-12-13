@@ -142,7 +142,7 @@ ui <- fluidPage(
       plotOutput("ScoreByMaritalStatus"),
       h1("Predicting Recidivism Risk"),
       p("Although this decision tree is rather overfit with high complexity, it does give us a good idea of which variables contribute most to the algorithm recidivism risk ratings. Branches nearer to the top have a higher contribution to the decisions made by the tree. For this tree, we included all demographic variables included in the dataset. These include binary sex, race, the reason for assesment, language spoken, and the individual’s legal status (post-trial, pre-trial, etc). As you can see, scores are more likely to be low risk than high or medium risk. The first big predictor of recidivism risk was whether or not the individual was African-American or Native American. If the individual was not identified as either of these races, the algorithm was most likely to predict low risk. The next biggest predictor for recidivism risk was sex. The COMPAS documentation explicitly mentions sex as part of their model, so there is no surprise that it ended up so high on the tree. The next most important predictor was legal status and finally if the individual was African-America or Native American. The race of individuals is not directly included in the algorithm, so their presence as a main predictor of recidivism is very alarming and telling of correlations between questions asked and individuals’ race."),
-      plotOutput("DecisionTree"),
+      plotOutput("DecisionTree", height = 500),
       h1("Take a Closer Look"),
       h4("Use the drop-downs to take a closer look at factors influencing risk scores."),
       selectInput("riskType", "Type of Risk", c("Risk of Recidivism", "Risk of Violence", "Risk of Failure to Appear")),
