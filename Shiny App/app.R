@@ -10,6 +10,8 @@ library(rpart)
 library(rpart.plot)
 library(rsconnect)
 
+########################################## Datasets and Wrangling ##########################################
+
 # Dataset of all Scores variables
 scores <- read.csv('https://raw.githubusercontent.com/adidust4/COMPAS-112-Final-Project/main/compas-scores-raw.csv') %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
@@ -38,24 +40,22 @@ race_scores_all <- scores %>%
   group_by(Ethnic_Code_Text, `Score Type`) %>%
   summarize(avg_score = mean(DecileScore))
 
-# Dataset grouping marital status
+# Dataset grouping by marital status
 marital_status_recidivism <- scores %>% 
   group_by(MaritalStatus) %>% 
   summarize(avg_score = mean(DecileScore))
 
-# Dataset of percentage race demographics 
+# Datasets of county and COMPAS demographics
 Demographics <- data.frame(
-  Type = c("county", "prison", "county","prison","county","prison", "county","prison"),
+  Type = c("County", "Prison", "County","Prison","County","Prison", "County","Prison"),
   Race = c("WhiteNonHispanic", "WhiteNonHispanic", "African-American", "African-American", "Hispanic", "Hispanic", "Other", "Other"),
   Percent= c(36.3, 35.8, 27.6,44.5,29.8,14.4,6.3,5.34))
- 
-# Dataset of binary sex 
 SexDemographics <- data.frame(
-  Type= c("county","prison","county","prison"),
+  Type= c("County","Prison","County","Prison"),
   Sex= c("Female","Female","Male","Male"),
   Percent= c(50.9, 22.9, 49.1,77.1))
 
-
+# set seed so is the same each time
 set.seed(229)
 
 # decision tree datasets
@@ -76,52 +76,37 @@ green <- "#b2e061"
 light_blue <- "#8bd3c7"
 purple <- "#bd7ebe"
 black <- "#000000"
-
 risk_palette <- c(red, green, yellow)
 sex_palette <- c(red, light_blue)
 palette7 <- c(red, orange, pink, yellow, green, light_blue, purple)
 
-#Define custom theme function
+# Define custom theme function
 our_theme <- function(){ 
-  
-  theme_minimal() %+replace%    #replace elements we want to change
-    
+  theme_minimal() %+replace%
     theme(
-      
       #grid elements
       panel.grid.minor = element_blank(),    
       axis.ticks = element_blank(),          
-      
       #text elements
-      plot.title = element_text(            #set font family
-        size = 20,                #set font size
-        face = 'bold',            #bold typeface
-        hjust = 0,                #left align
-        vjust = 2),               #raise slightly
-      
-      plot.subtitle = element_text(           #font family
-        size = 14),               #font size
-      
-      plot.caption = element_text(       #font family
-        size = 9,                 #font size
-        hjust = 1),               #right align
-      
-      axis.title = element_text(   #font family
-        size = 10),               #font size
-      
-      axis.text = element_text(       #axis famuly
-        size = 9),                #font size
-      
-      axis.text.x = element_text(            #margin for axis text
-        margin=margin(5, b = 10))
+      plot.title = element_text(            
+        size = 20,                
+        face = 'bold',            
+        hjust = 0,                
+        vjust = 2),               
+      plot.subtitle = element_text(size = 14),             
+      plot.caption = element_text(size = 9, hjust = 1),               
+      axis.title = element_text(size = 10),               
+      axis.text = element_text(size = 9),                
+      axis.text.x = element_text(margin=margin(5, b = 10))
     )
 }
 
-# Define UI for application that draws a histogram
+########################################## User Interface ##########################################
+
+# Define UI for application 
 ui <- fluidPage(
-
     theme = shinytheme("readable"),
-
+    
     # Application title
     fluidRow(
       column(6, offset = 3, align="center",
@@ -139,10 +124,11 @@ ui <- fluidPage(
       p("The demographics from the dataset do notably differ from the overall demographics for Broward County. Broward County, according to the 2020 Census, is about 30.6% African American, whereas 44.5% of the people in the dataset are African American. Additionally, the county is 50.9% female, but only about 22.9% of the people in the dataset are women."),
       h4("Demographics between Broward County and Jailed Population"),
       plotOutput("Demographics"),
+      
       # context
       h2("COMPAS Algorithm and Scoring"),
       p("The COMPAS algorithm determines risk factors based on scores derived from questionnaires and biographical data. The software reports a raw score and a decile score. The raw score is not directly interpretable, but low numbers indicate low risk and high numbers indicate high-risk scores. The decile scores are integers between 1 and 10. A decile score of 1 signifies that the individual has a risk score greater than 0% and less than 10% of the average score. The scores are roughly correlated to different measures of qualitative risk. A score from 1-4 represents low risk, a score from 5-7 represents a medium risk, and a score from 8-10 represents a high risk. The risk for recidivism types have a slightly different language, with 1-5 being unlikely, 6-7 being probable, and 8-10 being likely."),
-     
+      
       # data distribution
       h4("The following plots show the distribution of Decile and Raw Scores from the COMPAS dataset."),
       h5("The overall distribution of scores tends to skew towards low risk."),
@@ -181,8 +167,13 @@ ui <- fluidPage(
       p("In conclusion, the COMPAS algorithm shows clear reinforcement of existing race and sex-based prejudice in the legal system. While there are differing sample sizes for different demographics, there are a disproportionate number of African Americans and men in general within the dataset. This also means that a disproportionate number of people in the Broward County inmate system are African American and/or male to begin with. The COMPAS algorithm scores show that Native Americans (of whom there are very few within the dataset) are at the highest risk of recidivism, followed by African Americans. White and hispanic inmates, however, have a much lower risk of recidivism, with an over 1 point lower average COMPAS score. There is also a clear disparity in sex, with inmates identified in the dataset as Arabic having the biggest difference between men and women. Arabic men have a COMPAS score that is roughly double, on average, that of Arabic women. Similar trends can be seen when looking at marital status, with single people having the highest COMPAS scores on average, and married people having the lowest. The difference between these is also well over 1 point. While slight disparities in the scores could be attributed to a smaller sample size for some demographics over others, none of that would explain some of the extreme differences in COMPAS scores. There is clear evidence in this dataset of unfair treatment, expectations of marginalized populations, and a general racist prejudice within the Broward County legal system that is either contributing to, or being contributed to by these COMPAS scores."),
   )))
 
-# Define server logic required to draw a histogram
+
+########################################## Vizualization Logic ##########################################
+
+# Define server logic required to make visualizations
 server <- function(input, output) {
+  
+  # visualizations for county and COMPAS demographics
   output$Demographics <- renderPlot({
     #bar plot of Broward County and Data demographics 
     race <- ggplot(Demographics,aes(x= Type, y= Percent, fill=Race )) + 
@@ -194,10 +185,13 @@ server <- function(input, output) {
       geom_bar(stat="identity") +
       scale_fill_manual(values=c(pink,light_blue)) +
       our_theme() 
-  ggarrange(race, sex, ncol=1, nrow=2) })
+    ggarrange(race, sex, ncol=1, nrow=2) 
+    })
+  
+  # visualizations of score distributions
   output$AllScores <- renderPlot({
     # bar plot of decile scores
-    bar <- ggplot(clean, aes(x = DecileScore, fill = ScoreText)) + 
+    bar <- ggplot(clean, aes(x = DecileScore, fill = Risk)) + 
       geom_bar() + 
       scale_fill_manual(values = risk_palette) + 
       labs(title = "Decile Score Distribution", x = "Decile Scores")+
@@ -207,12 +201,36 @@ server <- function(input, output) {
       geom_density() + 
       labs(title = "Raw Score Distribution", x = "Raw Scores")+
       our_theme()
-    # pannel of charts
     ggarrange(bar, dense,  ncol = 1, nrow = 2)
   })
   
+  # visualization comparing risk scores by type of risk
+  output$ScoreByType <- renderPlot({
+    # bar plot of recidivism scores distribution
+    bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = Risk)) + 
+      geom_bar() + 
+      scale_fill_manual(values=risk_palette) +
+      labs(title = "Recidivism Scores", x = "Decile Score Distribution")+
+      our_theme()
+    # bar plot of violence scores distribution
+    bar_violence <- ggplot(clean_violence, aes(x = DecileScore, fill = Risk)) + 
+      geom_bar() + 
+      scale_fill_manual(values=risk_palette) + 
+      labs(title = "Violence Scores", x = "Decile Score Distribution") + 
+      guides(Risk = "none") + 
+      our_theme()
+    # bar plot of failure to appear scores distribution
+    bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = Risk)) + 
+      geom_bar() + 
+      scale_fill_manual(values=risk_palette) + 
+      labs(title = "Failure to Appear Scores", x = "Decile Score Distribution") + 
+      guides(Risk = "none") + 
+      our_theme()
+    ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
+  })
+  
+  # visualization of race vs score
   output$Race <- renderPlot({
-    # bar plot comparing average COMPAS scores of each type for different race demographics
     ggplot(race_scores_all, aes(fill=`Score Type`, y=avg_score, x=reorder(Ethnic_Code_Text, -avg_score))) + 
       geom_bar(position="dodge", stat="identity") +
       labs(title = "COMPAS Risk Score Averages By Race", x = "Race", y = "Average Score (Maximum of 10)") +
@@ -221,44 +239,18 @@ server <- function(input, output) {
       theme_light()
   })
   
-  output$ScoreByType <- renderPlot({
-    # bar plot of recidivism scores distribution
-    bar_recid <- ggplot(clean_recid, aes(x = DecileScore, fill = ScoreText)) + 
-      geom_bar() + 
-      scale_fill_manual(values=risk_palette) +
-      labs(title = "Recidivism Scores", x = "Decile Score Distribution")+
-      our_theme()
-    # bar plot of violence scores distribution
-    bar_violence <- ggplot(clean_violence, aes(x = DecileScore, fill = ScoreText)) + 
-      geom_bar() + 
-      scale_fill_manual(values=risk_palette) + 
-      labs(title = "Violence Scores", x = "Decile Score Distribution") + 
-      guides(Risk = "none") + 
-      our_theme()
-    # bar plot of failure to appear scores distribution
-    bar_fail_appr <- ggplot(clean_fail_appr, aes(x = DecileScore, fill = ScoreText)) + 
-      geom_bar() + 
-      scale_fill_manual(values=risk_palette) + 
-      labs(title = "Failure to Appear Scores", x = "Decile Score Distribution") + 
-      guides(Risk = "none") + 
-      our_theme()
-    # pannel of charts
-    ggarrange(bar_recid, ggarrange(bar_violence, bar_fail_appr, ncol = 2), nrow = 2, common.legend = TRUE, legend = "bottom")
-  })
-  
+  # visualization comparing scores by race and sex
   output$ScoreByRaceSex <- renderPlot({
-  # bar plot comparing average COMPAS scores for different race and sex demographics
-  ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
-    geom_bar(stat = 'identity', position = 'dodge') +
-    labs(x = "Race", y = "Average Score", fill = "Sex") +
-    scale_fill_manual(values = sex_palette) +
-    scale_x_discrete(guide = guide_axis(n.dodge=2)) +
-    our_theme()
+    ggplot(sex_race_score_recidivism, aes(x = reorder(Ethnic_Code_Text, -avg_score), y = avg_score, fill = Sex_Code_Text)) +
+      geom_bar(stat = 'identity', position = 'dodge') +
+      labs(x = "Race", y = "Average Score", fill = "Sex") +
+      scale_fill_manual(values = sex_palette) +
+      scale_x_discrete(guide = guide_axis(n.dodge=2)) +
+      our_theme()
   })
 
-
+  # visualization comparing scores by marital status
   output$ScoreByMaritalStatus <- renderPlot({
-    # bar plot comparing average COMPAS scores for different marital statuses
     ggplot(marital_status_recidivism, aes(x = reorder(MaritalStatus, -avg_score), y = avg_score, fill = MaritalStatus)) +
       geom_bar(stat = 'identity') +
       scale_fill_manual(values = palette7) +
@@ -267,19 +259,20 @@ server <- function(input, output) {
       our_theme()
   })
   
+  # decision tree to predict scores
   output$DecisionTree <- renderPlot ({
-    # decision tree
-    tree <- rpart(ScoreText ~., data = recid_train, control =rpart.control(minsplit =1,minbucket=1, cp=0.00005))
+    tree <- rpart(ScoreText ~., data = recid_train, control = rpart.control(minsplit = 1,minbucket= 1, cp= 0.00005))
     rpart.plot(tree, box.palette = list(red, green, yellow), fallen.leaves = FALSE, tweak = 1.38, Margin = 0)
   })
   
+  # dataframe that changes based on user input
   interactiveDF <- reactive({
     scores %>%
       filter(DisplayText == input$riskType, Sex_Code_Text == input$sex, MaritalStatus == input$marital, ScoreText != "N/A")
   })
   
+  # visualization that uses user input to compare scores by race
   output$interactive <- renderPlot({
-    # interactive viz
     ggplot(interactiveDF(), aes(x = Ethnic_Code_Text, fill = ScoreText))+
       geom_bar(position="fill", stat = "count") +
       labs(title = "Taking a Closer Look", x = "Race", y = "Proportion of Race by Score", fill = "Risk Prediction") +
