@@ -10,21 +10,11 @@ library(rpart)
 library(rpart.plot)
 library(rsconnect)
 
-
 # Dataset of all Scores variables
 scores <- read.csv('https://raw.githubusercontent.com/adidust4/COMPAS-112-Final-Project/main/compas-scores-raw.csv') %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "African-Am","African-American", Ethnic_Code_Text)) %>%
   mutate(Ethnic_Code_Text = if_else(Ethnic_Code_Text == "Oriental","Asian", Ethnic_Code_Text))
 
-# Dataset of Violent scores 
-violent <- read.csv('violent.csv')
-
-# Dataset grouping age and scores
-violent1 <- violent %>%
-  filter(score_text==c("High","Medium","Low")) %>% 
-  select(race, sex, age_cat, score_text) %>% group_by(race,sex,age_cat,score_text) %>% 
-  summarise(count=n()) 
-  
 # Dataset with decile factor scores
 clean <- scores %>% 
   filter(DecileScore > 0, DecileScore <= 10) %>%
@@ -54,7 +44,7 @@ marital_status_recidivism <- scores %>%
   summarize(avg_score = mean(DecileScore))
 
 # Dataset of percentage race demographics 
-RaceDemographics <- data.frame(
+Demographics <- data.frame(
   Type = c("county", "prison", "county","prison","county","prison", "county","prison"),
   Race = c("WhiteNonHispanic", "WhiteNonHispanic", "African-American", "African-American", "Hispanic", "Hispanic", "Other", "Other"),
   Percent= c(36.3, 35.8, 27.6,44.5,29.8,14.4,6.3,5.34))
@@ -143,8 +133,7 @@ ui <- fluidPage(
       column(6, offset = 3,
       
       # introduction
-      h2("What is COMPAS?"), 
-      plotOutput("AgeVisualization"),
+      h2("What is COMPAS?"),
       p(style="text-align: justify;","What if an algorithm decided who goes to prison and for how long? This may seem like a dystopian future, but we are already doing this in 2022. COMPAS (Correctional Offender Management Profiling for Alternative Sanctions) is a proprietary software that is used to predict the likelihood of arrested individuals' recidivism (to re-offend), committing violent acts, and failing to appear in court. This software is currently used in decisions of bail calculations, trials, sentencings, and paroles. The COMPAS software does not decide the actual outcomes of arrested individuals, but it does serve as additional “evidence” used by judges. The algorithm itself is proprietary, and therefore unknown to the public, but ProPublica has released a dataset of COMPAS decisions for individuals in Broward county, Florida. From this dataset, we are able to hypothesize about the accuracy, biases, and effects of the COMPAS algorithm. What factors are used to predict the COMPAS scores? How impactful are these factors? Could the predictions reproduce biases inherent in the criminal justice system? These are the questions we hope to answer in this article."),
       p("	The data in question was collected by ProPublica and contains data used to calculate COMPAS scores as well as the COMPAS scores themselves, from over 60,000 inmates in Broward County, Florida. The data also includes the outcome (whether or not the inmates went back to prison) from a two-year period after the scores were calculated. A lot of demographic information is included in the dataset, including race, binary sex, first and last name, the date they were screened, age, number of criminal counts of different types, case number, dates in and out of jail, charge degree, charge description, and much more. Also notable in the dataset is what the COMPAS score was actually calculated for. This can be one of three categories: risk of recidivism, risk of violence, and risk of failure to appear in court. Given that demographic information such as race is taken into account when calculating the scores, ProPublica found the scores to be quite prejudiced and found that African American inmates were seen as more of a risk than they actually were, while white inmates were seen as less of a risk than they actually were, on average. This is also noticeable with other marginalized races when looking at the data and especially when visualized."),
       p("The demographics from the dataset do notably differ from the overall demographics for Broward County. Broward County, according to the 2020 Census, is about 30.6% African American, whereas 44.5% of the people in the dataset are African American. Additionally, the county is 50.9% female, but only about 22.9% of the people in the dataset are women."),
@@ -153,6 +142,7 @@ ui <- fluidPage(
       # context
       h2("COMPAS Algorithm and Scoring"),
       p("The COMPAS algorithm determines risk factors based on scores derived from questionnaires and biographical data. The software reports a raw score and a decile score. The raw score is not directly interpretable, but low numbers indicate low risk and high numbers indicate high-risk scores. The decile scores are integers between 1 and 10. A decile score of 1 signifies that the individual has a risk score greater than 0% and less than 10% of the average score. The scores are roughly correlated to different measures of qualitative risk. A score from 1-4 represents low risk, a score from 5-7 represents a medium risk, and a score from 8-10 represents a high risk. The risk for recidivism types have a slightly different language, with 1-5 being unlikely, 6-7 being probable, and 8-10 being likely."),
+     
       # data distribution
       h4("The following plots show the distribution of Decile and Raw Scores from the COMPAS dataset."),
       h5("The overall distribution of scores tends to skew towards low risk."),
@@ -192,17 +182,10 @@ ui <- fluidPage(
   )))
 
 # Define server logic required to draw a histogram
-server <- function(input, output) 
-  output$AgeVisualization <-  renderPlot({
-    ggplot(violent1, aes(x=factor(score_text, level=c('Low', 'Medium','High')),y=count,fill=race)) +
-      geom_bar(stat="identity") +
-      facet_wrap(~factor(age_cat, levels=c('Greater than 45','25 - 45','Less than 25')))+
-      xlab("risk level of recidivism")
-    })
-
+server <- function(input, output) {
   output$Demographics <- renderPlot({
     #bar plot of Broward County and Data demographics 
-    race <- ggplot(RaceDemographics,aes(x= Type, y= Percent, fill=Race )) + 
+    race <- ggplot(Demographics,aes(x= Type, y= Percent, fill=Race )) + 
       geom_bar(stat="identity") + 
       scale_fill_manual(values=c(red, orange, green, light_blue)) +
       our_theme()
@@ -211,9 +194,7 @@ server <- function(input, output)
       geom_bar(stat="identity") +
       scale_fill_manual(values=c(pink,light_blue)) +
       our_theme() 
-  ggarrange(race, sex, ncol=1, nrow=2) 
-  })
-  
+  ggarrange(race, sex, ncol=1, nrow=2) })
   output$AllScores <- renderPlot({
     # bar plot of decile scores
     bar <- ggplot(clean, aes(x = DecileScore, fill = ScoreText)) + 
@@ -303,11 +284,11 @@ server <- function(input, output)
       geom_bar(position="fill", stat = "count") +
       labs(title = "Taking a Closer Look", x = "Race", y = "Proportion of Race by Score", fill = "Risk Prediction") +
       scale_fill_manual(values = c("Low" = green, "Medium" = yellow, "High" = red)) + 
-      geom_label(aes(label=..count..), stat='count', position='fill', size=2) + 
+      geom_label(aes(label=..count..), stat='count', position='fill', size=2,) + 
       our_theme()
   })
   
-
+}
 
 # Run the application 
 shinyApp(ui = ui, server = server)
